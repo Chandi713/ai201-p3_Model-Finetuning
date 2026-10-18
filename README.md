@@ -177,48 +177,67 @@ circumstances and "has anyone," but they do not ask whether the plan is wise.
 
 ## The Dataset
 
-<!-- Where you collected from, how you labelled, your counts, and three hard
-     cases. -->
-
 **Where the posts came from:**
+Public posts from [r/f1visa](https://www.reddit.com/r/f1visa). Title plus full
+body, not trimmed. One file, `labels.csv`, not pre-split.
 
-**How I labelled them:** <!-- Cold first? Pre-labelled with AI and corrected?
-Say so plainly — the disclosure is required, not penalised. -->
+**How I labelled them:**
+I labelled 20 posts cold first — definitions only, no tools — and marked those
+rows `cold` in the note column. An AI tool pre-labelled the rest from the same
+definitions. I then read and corrected every pre-labelled row and marked them
+`pre-labeled, checked`. Nothing in the file is still `needs review`.
 
 **Counts per label:**
 
 | Label | Count | Share |
 |---|---|---|
-|  |  |  |
-|  |  |  |
-|  |  |  |
-| **Total** |  | 100% |
+| `rule_question` | 214 | 37.3% |
+| `risk_check` | 172 | 30.0% |
+| `experience_request` | 126 | 22.0% |
+| `miscellaneous` | 61 | 10.6% |
+| **Total** | **573** | **100%** |
+
+No label is above 70%. The largest is `rule_question` at 37.3%.
 
 **Three hard cases**
 
-<!-- Any post that made you pause: what it was, which two labels it could have
-     been, and what you chose. These are worth more than the easy 190. -->
-
 **1.**
-> *The post:*
+> *The post:* Employer transfer to Canada vs continuing in the US on F-1/CPT?
+> STEM OPT ending; employer may transfer them to Canada, or they could enroll
+> in a Day-1 CPT program. "I'm not looking for a debate on whether Day 1 CPT
+> is good or bad. I'm mainly interested in hearing from anyone who faced a
+> similar decision."
 >
-> *Could have been:*
+> *Could have been:* `risk_check` (own plan: Canada vs Day-1 CPT) or
+> `experience_request` (asks only what others who chose each route later felt).
 >
-> *I chose, because:*
+> *I chose, because:* `experience_request`. They put the decision in the post
+> but did not ask readers to judge it. Other people's outcomes would settle
+> what they asked.
 
 **2.**
-> *The post:*
+> *The post:* Travelling to hometown before starting job on F1-OPT. Job
+> postponed so they can visit home; EAD, visa, passport, travel I-20 in hand.
+> "Will that along with my offer letter be sufficient to go and come back?
+> Has anyone done this and had any issues?"
 >
-> *Could have been:*
+> *Could have been:* `rule_question` (are these documents enough to re-enter)
+> or `risk_check` (will *my* trip before the job starts go wrong).
 >
-> *I chose, because:*
+> *I chose, because:* `risk_check`. They already have a plan and are asking
+> whether it will cause issues, not only what the document list is.
 
 **3.**
-> *The post:*
+> *The post:* Regular OPT/Biom question. Filed April 21, biometrics June 8,
+> still pending. "Does the 5 months processing time start when you complete
+> biometrics or when you file? I have a job offer should I pay PP?"
 >
-> *Could have been:*
+> *Could have been:* `rule_question` (when the processing clock starts) or
+> `risk_check` (should I pay premium on my case).
 >
-> *I chose, because:*
+> *I chose, because:* `rule_question`. The first and main ask is a procedure
+> fact a DSO could answer. "Should I pay PP?" is a second question, not the
+> one that would settle the post.
 
 ---
 
