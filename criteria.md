@@ -51,61 +51,87 @@ whether you hit them:
 
 ---
 
-## 1.
+## 1. Overall accuracy
 
-<!-- Your criterion. It must name a number. -->
+The `accuracy` value in `results.json` for the held-out test split is
+**≥ 0.60** as a raw number (not rounded up). This must hold separately for
+each of seeds **42, 7, and 2024**. A run of 0.599 fails.
 
-
-
-**Why this target:**
-
-
-
----
-
-## 2.
-
-<!-- Your criterion. -->
-
-
-
-**Why this target:**
-
-
+**Why this target:** I picked 0.60 because `rule_question` is already 214 of
+573 posts (37%), so a model that only guesses that label would score 0.37. A
+target of 0.60 is the lowest number I would still call useful on this
+community, and I did not pick 0.70 because the `experience_request` /
+`risk_check` boundary will cost points across three seeds.
 
 ---
 
-## 3.
+## 2. Per-label performance
 
-<!-- Your criterion. -->
+Using the per-label `f1` fields in `results.json` for the held-out test
+split, all three of `rule_question`, `experience_request`, and `risk_check`
+are **≥ 0.50**, and `miscellaneous` is **≥ 0.40**. Each comparison uses the
+raw F1, not a rounded value. This must hold separately for each of seeds
+**42, 7, and 2024**. A missing label in the test split (support 0) is a miss
+for that label, not a skip.
 
-
-
-**Why this target:**
-
-
-
----
-
-## 4.
-
-<!-- Your criterion. -->
-
-
-
-**Why this target:**
-
-
+**Why this target:** I picked 0.40 F1 for `miscellaneous` because it is my
+smallest label and I only have 61 examples of it, so about nine land in the
+test split. I picked 0.50 for the other three because each of those has at
+least 126 rows, enough that a 0.50 floor is a real miss and not a noisy
+draw.
 
 ---
 
-## 5.
+## 3. Balance
 
-<!-- Your criterion. -->
+On the held-out test split, let *n* be the number of test rows and let
+*count(y)* be how many times the model predicted label *y*. For every label
+*y*, *count(y) / n* is **≤ 0.50**. Ties at exactly 0.50 pass; 0.501 fails.
+Use predicted labels (confusion-matrix column sums), not true labels. This
+must hold separately for each of seeds **42, 7, and 2024**.
 
+**Why this target:** I picked 0.50 because `rule_question` is already 37% of
+my labels. If more than half of the test guesses are one label, the model
+learned to dump everything on `rule_question` and `miscellaneous` (61 rows)
+never gets used. 0.50 is above 37%, so a little over-prediction is allowed;
+a collapse is not.
 
+---
 
-**Why this target:**
+## 4. Consistency
+
+Take the 20 rows in `labels.csv` whose `note` contains `cold`. A second
+reader, using only the README definitions and the written decision rule,
+assigns one of the four labels to each of those 20 texts. Agreement is the
+number of rows where the second reader's label string matches mine exactly.
+That count is **≥ 15** (0.75). Near-misses, “either label is fine,” and
+agreement on a different 20-row sample do not count.
+
+**Why this target:** I picked 15/20 because the hardest boundary in this
+taxonomy is `experience_request` vs `risk_check` — “has anyone done this?”
+vs “should I do this?” I expect a second reader to split with me on about
+five of those and still agree on the clean rule and miscellaneous posts. I
+did not pick 18/20 because that would pretend the decision rule removed a
+boundary I already know is hard.
+
+---
+
+## 5. Confidence
+
+Using the held-out test split, let *A_high* be
+`confidence.accuracy_most_confident_third` and *A_low* be
+`confidence.accuracy_least_confident_third` in `results.json` (the
+notebook's ranking of test rows by predicted probability, split into
+thirds). *A_high − A_low* is **≥ 0.12** as a raw difference, not rounded.
+This must hold separately for each of seeds **42, 7, and 2024**. A higher
+sure-third accuracy that still leaves the gap under 0.12 fails this
+criterion even if criterion 1 passes.
+
+**Why this target:** I picked a gap of 0.12 because the held-out set is
+about 86 posts, so each third is about 28 rows — 0.12 is roughly three extra
+correct guesses in the sure third. On this community a high-confidence
+`risk_check` is only worth trusting if sure guesses are actually righter
+than unsure ones. Absolute accuracy is already criterion 1.
 
 
 
