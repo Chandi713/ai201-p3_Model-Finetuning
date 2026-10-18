@@ -243,44 +243,141 @@ No label is above 70%. The largest is `rule_question` at 37.3%.
 
 ## The Training Run
 
-<!-- Your starting model, your settings, and anything you changed and why. -->
+**Base model:** `distilbert-base-uncased`
 
-**Base model:**
-
-**Settings:** <!-- epochs, learning rate, batch size, seed -->
+**Settings:** 3 epochs, learning rate `2e-5`, batch size 16, max length 128,
+seed 42.
 
 **Anything I changed from the defaults, and why:**
+Nothing. The defaults are the run I am reporting.
 
-**Split sizes:** <!-- train / val / test, and per-label counts in the test
-split. If a label had fewer than about 8 in test, say so — it explains a lot
-of next unit's variance. -->
+**Device:** `mps` (Apple Silicon GPU), torch 2.14.1. This is part of the
+result. The same data and seed on different hardware can move the numbers
+slightly.
 
+**Split sizes:** stratified 70/15/15.
 
+| Label | train | val | test |
+|---|---|---|---|
+| `rule_question` | 150 | 32 | 32 |
+| `risk_check` | 120 | 26 | 26 |
+| `experience_request` | 88 | 19 | 19 |
+| `miscellaneous` | 43 | 9 | 9 |
+| **Total** | **401** | **86** | **86** |
+
+`miscellaneous` has 9 examples in the test split, just above the notebook's
+"fewer than 8" note. Its F1 will move a lot between seeds next unit.
+
+### Seed 42 results (this unit's run)
+
+Held-out accuracy was **0.419**. Macro F1 was **0.230**. Always predicting
+`rule_question` on this split would have scored 32/86 ≈ 0.37, so the trained
+model was only slightly above a majority guesser.
+
+| Label | Precision | Recall | F1 | Support |
+|---|---|---|---|---|
+| `rule_question` | 0.42 | 0.88 | 0.57 | 32 |
+| `experience_request` | 0.00 | 0.00 | 0.00 | 19 |
+| `risk_check` | 0.40 | 0.31 | 0.35 | 26 |
+| `miscellaneous` | 0.00 | 0.00 | 0.00 | 9 |
+
+| true \ predicted | `rule_question` | `experience_request` | `risk_check` | `miscellaneous` |
+|---|---|---|---|---|
+| **`rule_question`** | 28 | 0 | 4 | 0 |
+| **`experience_request`** | 14 | 0 | 5 | 0 |
+| **`risk_check`** | 18 | 0 | 8 | 0 |
+| **`miscellaneous`** | 6 | 0 | 3 | 0 |
+
+The model predicted `rule_question` 66 times out of 86 (77%) and never
+predicted `experience_request` or `miscellaneous`.
+
+Confidence: most-sure third accuracy 0.500, least-sure third 0.321, gap
+**0.179**.
+
+### Against the five criteria (seed 42 only)
+
+Criteria 1, 2, 3, and 5 have to hold on seeds 42, 7, and 2024. Seeds 7 and
+2024 have not been run. This table is this seed only. Missing a target here
+does not change the filed criteria.
+
+| # | Criterion | Target | Seed 42 | Verdict |
+|---|---|---|---|---|
+| 1 | Held-out accuracy | ≥ 0.60 | 0.419 | Miss |
+| 2 | Per-label F1 | RQ/ER/RC ≥ 0.50; misc ≥ 0.40 | 0.57 / 0.00 / 0.35 / 0.00 | Miss |
+| 3 | Share of any predicted label | ≤ 0.50 | `rule_question` 66/86 = 0.77 | Miss |
+| 4 | Second-reader agreement on the cold 20 | ≥ 15/20 | not measured this run | Not tested |
+| 5 | Sure third − unsure third | ≥ 0.12 | 0.179 | Met |
+
+### Why the misses
+
+The taxonomy classifies **what the poster is asking for**, not the topic.
+Almost every r/f1visa post uses the same words (OPT, I-20, USCIS, DSO).
+DistilBERT, three epochs, 128 tokens, and 401 training rows is a weak setup
+for that distinction. The model learned something closer to "this is an F-1
+question" and mapped it onto `rule_question`, which is already 37% of the
+file and 150 of 401 training rows.
+
+That collapse is the same failure under criteria 1, 2, and 3. Accuracy sits
+near the majority baseline. `experience_request` and `miscellaneous` have
+F1 0.00 because they were never predicted. `risk_check` recovered only 8 of
+26 true cases. Predicted `rule_question` is 77% of the test guesses, which
+is the collapse criterion 3 was written to catch.
+
+The other piece is the hardest boundary. `experience_request` and
+`risk_check` share "has anyone" / "my situation" language. The model did
+not learn the split: 14 of 19 true experience posts and 18 of 26 true risk
+posts were called `rule_question`. `miscellaneous` has only 43 training
+examples and 9 in test, and those posts still mention F-1 life, so they
+look like questions.
+
+Criterion 5 passed because the model is more confident when it repeats
+`rule_question` on obvious rule posts (recall 0.875 on that label). That
+gap ranks the majority habit. It does not mean the four-way distinction was
+learned.
+
+This is a finding about the task and the data, not a failed training
+script. `results.json` and `test_split.csv` are the evidence. The next unit
+is where three seeds, the baseline, and one improvement get tested. The
+criteria stay as filed.
 
 ---
 
 ## How I Used AI
 
-<!-- Two specific moments — what you asked, what came back, what you changed.
-
-     ⚠️ Plus disclosure of any pre-labelling. If you had a model pre-label a
-     batch and then read and corrected every one, say that. It's an allowed
-     workflow and disclosing it costs you nothing. Not disclosing it is the
-     problem. -->
-
 **Moment 1**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* A read of a large batch of r/f1visa posts: a summary
+  of what people talk about most, whether they cite official sources, and
+  whether the posts cluster as confusion, assertions, procedure questions,
+  or something too mixed to classify.
+- *What came back:* Topic did not separate the posts — almost everything
+  was OPT, travel, or status. The useful split was the *kind of ask*: a
+  rule an official source could answer, other people's outcomes, a judgment
+  on the poster's own plan, or no real question.
+- *What I changed:* I dropped topic-based labels and built the taxonomy
+  around what the poster wants back. That is the four labels in this repo.
+  It saved a full manual pass just to see the pattern, which I then checked
+  against posts I actually read.
 
 **Moment 2**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* After I labelled 20 posts cold, I asked the model to
+  pre-label the rest from my definitions, and to leave genuinely borderline
+  posts unlabelled so I would have to decide them myself.
+- *What came back:* A labelled majority plus a held-out "dicey" set that
+  sat on `experience_request` vs `risk_check`, or mixed a rule question
+  with "should I."
+- *What I changed:* I used those unlabelled clashes to write the decision
+  rule (judge the post by the answer that would settle it; a next step on
+  an already-filed case is `risk_check`). I then read and corrected every
+  pre-labelled row. The dicey posts I labelled by hand are marked `hard
+  case` in `labels.csv`.
 
 **Pre-labelling disclosure:**
+20 rows were labelled cold, with no tools, and are marked `cold`. The other
+540 were AI-pre-labelled from the written definitions, then read and
+corrected by me, and are marked `pre-labeled, checked`. No row in the file
+is still `needs review`.
 
 <!-- ═══════════════════════ UNIT 6 — THE TEST ═══════════════════════
 
