@@ -9,6 +9,7 @@ __pycache__/
 venv/
 env/
 ai201-p3/
+Helpful_Data/
 
 # Jupyter
 .ipynb_checkpoints/
