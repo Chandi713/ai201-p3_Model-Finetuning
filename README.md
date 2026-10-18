@@ -39,10 +39,13 @@
 
 ## What This Does
 
-<!-- Your community, and what your classifier sorts posts into. Three or four
-     sentences. -->
-
-
+TakeMeter classifies posts from r/f1visa, a public subreddit where
+international students ask about F-1 status, OPT, travel and school.
+Almost every post is about those same topics, so the model does not sort
+by subject. It sorts by what the poster is asking the community for:
+`rule_question`, `experience_request`, `risk_check`, or `miscellaneous`
+when the post is not asking a rule, experience or risk question about
+F-1 status.
 
 ---
 
@@ -54,34 +57,120 @@
      The decision rule is worth a point on its own and it's the thing most
      people leave out. Every taxonomy has a hardest boundary. Name yours. -->
 
-### `label_one`
+Every label describes **what the post is asking the community for**, not its
+topic. Almost every post in r/f1visa is about OPT, travel or status, so topic
+can't tell posts apart. What they want back can.
 
-**Definition:**
+> **How the fourth label came about:** I first tried a `share_vent` label for
+> posts that give news, experience reports or feelings instead of asking for
+> help. It was a real group but only about 22 of 575 posts (~4%), too few to
+> train or measure on its own. I folded it into a broader `miscellaneous`
+> label together with off-topic and speculative posts, which gives the model a
+> "none of the above" option instead of forcing every post into a question
+> label.
+
+### `rule_question`
+
+**Definition:** Asks what the rules or procedure are, in a way an official
+source (USCIS, the regulations, a DSO) could answer completely.
 
 **Example 1:**
->
+> got rfe but recently changed address — hi everyone i just received an RFE for
+> my post completion OPT but i recently moved and just changed my address
+> yesterday. i highly doubt that the mail is gonna come into my new address. i
+> was wondering if RFE notice will be uploaded to my portal in the document
+> section?
 
 **Example 2:**
->
+> Paying PP with a foreign bank? — Can I use a foreign bank card (debit) to pay
+> for Premium Processing for OPT or should it be a US debit/credit card?
 
-### `label_two`
+### `experience_request`
 
-**Definition:**
+**Definition:** Asks other people for their outcomes, timelines or data
+points, without asking whether the poster's own plan is wise.
 
 **Example 1:**
->
+> OPT/STEM OPT RFE – how long after responding did you get approved? — If
+> you've had an RFE on OPT or STEM OPT, could you please share: when USCIS
+> received your response, when you got the approval, regular or premium
+> processing. Any data points would really help.
 
 **Example 2:**
->
+> How long for F-1 OPT SSN card to arrive after in-person SSA visit? — For
+> those on F-1 OPT who recently applied for an SSN in person at the SSA office
+> in Ohio, how long did it take for the physical card to arrive in the mail?
+
+### `risk_check`
+
+**Definition:** Asks for a judgment on whether the poster's own situation or
+plan is safe, risky, or likely to work out.
+
+**Example 1:**
+> Can I Visit Canada? — I'm currently on F1 OPT, working for a company in
+> Boston. I'm thinking of taking a road trip to Canada to visit my bestfriend.
+> I have a valid i20 with travel signature, a job to come back to, EAD card in
+> hand. Is this safe to do? Any potential risks?
+
+**Example 2:**
+> Getting married while STEM OPT application pending — My initial
+> post-completion OPT has ended, and I'm about two months into the 180-day
+> extension. Would it be too risky to get married (to a US citizen) when my
+> status isn't solid?
+
+### `miscellaneous`
+
+**Definition:** Does not ask the community a rule, experience or risk question
+about F-1 status: it shares news, an experience report or feelings,
+speculates, or asks about something outside F-1 rules. A non-immigration
+event stays `miscellaneous` until they ask what to do on an F-1 form or
+filing; then it is `rule_question`. Feelings or venting around the question
+do not make it `miscellaneous` if they still ask whether a plan is safe,
+reckless, or likely to work out.
+
+**Example 1:**
+> Recent STEM OPT POE - Seattle 09/02 — Here is my recent experience
+> re-entering the US on F-1 STEM OPT. Hope this helps anyone traveling soon!
+> Port of Entry: Seattle. Documents brought: travel I-20, employment letter,
+> recent pay slips…
+
+**Example 2:**
+> OPT ending and very sad — I graduated in December 2025 after five years in
+> the U.S. … Now it feels like all that hard work is now going to be placed in
+> packing boxes.
 
 ### The hardest boundary
 
-**Which two labels:**
+**Which two labels:** `experience_request` vs `risk_check`
 
 **The decision rule I used every time:**
-<!-- e.g. "If the post names a specific checkable fact, it's `analysis`, even
-     if the tone is heated." -->
+Label the post by the kind of answer that would settle it, not by how much of
+their own story they tell. A long "my situation" section does not make it
+`risk_check` on its own.
 
+If the poster asks readers to judge their own plan — should I go ahead, is
+this safe, will this work out for me, is this a good answer — it is
+`risk_check`. That still holds when the sentence is "has anyone done this?"
+
+It is `experience_request` only when other people's outcomes, timelines or
+data points would settle the post on their own, and the poster does not put
+their decision to the community.
+
+Asking which next step to take on an already-filed case — upload this,
+withdraw, wait, apply for a replacement — is `risk_check`, even when the
+options are official procedures. It is `rule_question` only when they ask
+what the procedure *is*, not which one to pick for themselves.
+
+*Borderline post:* "Renewing F1 Visa Under STEM OPT — I am extremely nervous
+about this decision … I am considering canceling the appointment and remain
+here if it is safer this way. Has anybody been in these shoes lately?" →
+`risk_check`. They ask for experiences, but what would settle it is whether
+to go.
+
+*The other side of the same line:* "Travel during pending Initial OPT — The
+international office said that I can travel. Is there anyone who recently
+traveled in this kind of situation?" → `experience_request`. Own
+circumstances and "has anyone," but they do not ask whether the plan is wise.
 
 
 ---
