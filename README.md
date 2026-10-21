@@ -391,20 +391,40 @@ is still `needs review`.
 <!-- Both models on the same posts. `python baseline.py --trained results.json`
      prints this table for you. -->
 
+Both scored on the same 86 held-out posts in `test_split.csv` (seed 42). Baseline: `facebook/bart-large-mnli`, zero-shot, using my definitions from `label_definitions.txt`. Trained: `results.json` from unit 5.
+
 | Measure | Baseline | Trained | Difference |
 |---|---|---|---|
-| Overall accuracy |  |  |  |
-| Macro F1 |  |  |  |
-| F1 — `label_one` |  |  |  |
-| F1 — `label_two` |  |  |  |
+| Overall accuracy | 0.453 | 0.419 | -0.035 |
+| Macro F1 | 0.274 | 0.230 | -0.044 |
+| F1 — `experience_request` | 0.000 | 0.000 | +0.000 |
+| F1 — `miscellaneous` | 0.000 | 0.000 | +0.000 |
+| F1 — `risk_check` | 0.557 | 0.348 | -0.209 |
+| F1 — `rule_question` | 0.540 | 0.571 | +0.032 |
 
 **What I predicted before I looked:**
-<!-- Milestone 1 asks you to write this BEFORE seeing the trained numbers. A
-     prediction made afterwards isn't one. -->
+I predict the trained model will beat the baseline on `risk_check` and `experience_request`, because those two share F-1 vocabulary and differ only in intent ("should I…" vs. "has anyone…"). One-sentence definitions give a zero-shot model little to separate them, whereas the trained model saw 172 and 126 examples of the phrasing. I expect the baseline to match or beat it on `rule_question`, where the definition alone is enough. One caveat: my seed-42 `experience_request` F1 was 0.0, so this prediction could be wrong.
 
 **What the gap actually means:**
 <!-- If the baseline matched your trained model, your fine-tuning added
      nothing — and that is a real finding, not a failure. Say it plainly. -->
+
+The trained model did **not** beat the baseline. It lost on accuracy (0.419 vs. 0.453), on macro F1 (0.230 vs. 0.274) and on `risk_check` (0.348 vs. 0.557). It was only slightly ahead on `rule_question` (0.571 vs. 0.540). So on this split, my fine-tuning added nothing measurable over a general model reading my definitions. My prediction was wrong: I expected a win on `risk_check` and `experience_request`, and got a loss and a tie at zero.
+
+The more important finding is that both models scored F1 0.0 on `experience_request` and `miscellaneous`. A trained model and an untrained one failing on the same two labels points at the task or the labels, not at the training. The baseline is also slower (a few seconds per post on `mps`), so on cost alone it is no better. This is one seed, so I'll revisit the comparison once I have three.
+
+**Definitions vs. bare label names.** I also ran the baseline with no definitions, so the model saw only the label names. Same 86 held-out posts.
+
+| Measure | With definitions | Bare names | Difference |
+|---|---|---|---|
+| Overall accuracy | 0.453 | 0.360 | +0.093 |
+| Macro F1 | 0.274 | 0.306 | -0.032 |
+| F1 — `experience_request` | 0.000 | 0.434 | -0.434 |
+| F1 — `miscellaneous` | 0.000 | 0.182 | -0.182 |
+| F1 — `risk_check` | 0.557 | 0.450 | +0.107 |
+| F1 — `rule_question` | 0.540 | 0.158 | +0.382 |
+
+My definitions were worth about 9 points of accuracy, but they did not help every label. They sharply improved `rule_question` and `risk_check`, and they made `experience_request` and `miscellaneous` *worse*: both dropped to F1 0.0. Bare names actually gave a higher macro F1. I report the with-definitions run as my baseline because that is the run `label_definitions.txt` was written for.
 
 
 
