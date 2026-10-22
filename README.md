@@ -435,31 +435,30 @@ My definitions were worth about 9 points of accuracy, but they did not help ever
 <!-- Five criteria across three seeds. The notebook's section 6 prints the
      spread table; the Target and Verdict columns are yours. -->
 
+Run on `mps` (Apple Silicon), fine-tuned `distilbert-base-uncased`, 3 epochs, lr 2e-5, batch 16, max length 128. Source: `results_three_seeds_before.json`. Accuracy moved only 0.023 across the three seeds (0.419 to 0.442), well under the ten-point warning line, so the poor result is stable and not a bad draw.
+
 | Criterion | Target | Seed 42 | Seed 7 | Seed 2024 | Verdict |
 |---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |
+| 1. Overall accuracy | ≥ 0.60 on every seed | 0.419 | 0.442 | 0.419 | (Milestone 4) |
+| 2. Per-label F1 (`rule_question` / `experience_request` / `risk_check` / `miscellaneous`) | first three ≥ 0.50, `miscellaneous` ≥ 0.40 | 0.571 / 0.000 / 0.348 / 0.000 | 0.539 / 0.000 / 0.509 / 0.000 | 0.537 / 0.190 / 0.294 / 0.000 | (Milestone 4) |
+| 3. Balance: largest predicted-label share | ≤ 0.50 | 0.767 (`rule_question`) | 0.663 (`rule_question`) | 0.884 (`rule_question`) | (Milestone 4) |
+| 4. Consistency: second reader agrees on the 20 `cold` rows | ≥ 15 / 20 | not run yet | not run yet | not run yet | (Milestone 4) |
+| 5. Confidence gap (most minus least confident third) | ≥ 0.12 | 0.179 | 0.536 | 0.464 | (Milestone 4) |
 
 ### Confusion matrix
 
-<!-- ⚠️ TYPED AS A MARKDOWN TABLE. The notebook prints one ready to paste.
-     An image of a matrix earns nothing. -->
+Seed 42, the same split as `results.json`. Rows are true labels, columns are the model's guesses.
 
-| true \ predicted |  |  |  |
-|---|---|---|---|
-| **** |  |  |  |
-| **** |  |  |  |
-| **** |  |  |  |
+| true \ predicted | rule_question | experience_request | risk_check | miscellaneous |
+|---|---|---|---|---|
+| **rule_question** | 28 | 0 | 4 | 0 |
+| **experience_request** | 14 | 0 | 5 | 0 |
+| **risk_check** | 18 | 0 | 8 | 0 |
+| **miscellaneous** | 6 | 0 | 3 | 0 |
 
 **My biggest off-diagonal number, and what it means:**
-<!-- Not "the model made mistakes" — WHICH boundary it didn't learn, and which
-     direction. "7 real analysis posts were called hot_take and only 3 went the
-     other way" is a direction, not just an error rate. -->
 
-
+The biggest off-diagonal cell is 18 real `risk_check` posts called `rule_question`, against only 4 real `rule_question` posts called `risk_check`. The model hasn't learned that boundary. It defaults to `rule_question` for anything that sounds procedural. The same pull shows in the other rows: 14 `experience_request` posts and 6 `miscellaneous` posts also went to `rule_question`, and neither of those labels was predicted at all on this seed.
 
 ---
 
@@ -553,13 +552,15 @@ My definitions were worth about 9 points of accuracy, but they did not help ever
 
 ### Run Log — After
 
+Run on `mps` (Apple Silicon), fine-tuned `distilbert-base-uncased`, 3 epochs, lr 2e-5, batch 16, max length 128. Source: `results_three_seeds_before.json`. Accuracy moved only 0.023 across the three seeds (0.419 to 0.442), well under the ten-point warning line, so the poor result is stable and not a bad draw.
+
 | Criterion | Target | Seed 42 | Seed 7 | Seed 2024 | Verdict |
 |---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |
+| 1. Overall accuracy | ≥ 0.60 on every seed | 0.419 | 0.442 | 0.419 | (Milestone 4) |
+| 2. Per-label F1 (`rule_question` / `experience_request` / `risk_check` / `miscellaneous`) | first three ≥ 0.50, `miscellaneous` ≥ 0.40 | 0.571 / 0.000 / 0.348 / 0.000 | 0.539 / 0.000 / 0.509 / 0.000 | 0.537 / 0.190 / 0.294 / 0.000 | (Milestone 4) |
+| 3. Balance: largest predicted-label share | ≤ 0.50 | 0.767 (`rule_question`) | 0.663 (`rule_question`) | 0.884 (`rule_question`) | (Milestone 4) |
+| 4. Consistency: second reader agrees on the 20 `cold` rows | ≥ 15 / 20 | not run yet | not run yet | not run yet | (Milestone 4) |
+| 5. Confidence gap (most minus least confident third) | ≥ 0.12 | 0.179 | 0.536 | 0.464 | (Milestone 4) |
 
 **Did it help, and how do I know:**
 
