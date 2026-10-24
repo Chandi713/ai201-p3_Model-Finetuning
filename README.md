@@ -498,7 +498,7 @@ The biggest off-diagonal cell is 18 real `risk_check` posts called `rule_questio
      data/staff_taxonomy.md, not your own — so every argument below is made
      from those definitions and those decision rules. -->
 
-**Agreement rate:** ___ / 30 = ___%
+**Agreement rate:** 29 / 30 = 96.7%
 
 <!-- Nobody grades this number. A 60% who argues every disagreement from the
      stated rules beats a 95% who wrote "staff was right" nine times. Several
@@ -521,25 +521,26 @@ The biggest off-diagonal cell is 18 real `risk_check` posts called `rule_questio
      what you did across your own 200. -->
 
 **1.**
-> *The post:*
+> *The post:* "Carbon plates aren't the whole story. My times dropped 2% in the shoes and another 2% the following year in the same pair, when the only thing that changed was going from 35 to 50 miles a week."
 >
-> *Staff said / I said:*
+> *Staff said / I said:* Staff `analysis` / I said `hot_take`
 >
-> *My call, and why:*
+> *My call, and why:* I still think `hot_take` is defensible, though staff's reading has a real case. To me the post reads as a confident claim ("carbon plates aren't the whole story") rather than an argument. The `analysis` definition asks for a *specific, checkable* fact, and the 2% isn't checkable: nothing says what it is 2% of, which races or distances, or how it was worked out. With no reference behind it, it reads like a bluff number, the "statistic in it" that Rule 1 warns about. The case for staff is that Rule 1 only asks whether the fact carries the argument, and the structure is an argument: the second 2% drop came with the shoes held constant and only the mileage changed, and that comparison is the whole reason given. But Rule 1 only matters once there is a checkable fact, and that is the step I don't think this post clears. It also separates this post from the other two runner's-own-numbers posts I labelled `analysis`. The sleep post says how its number was collected (eleven weeks of tracking, intervals 6–8 seconds per mile slower), and so does the heat post (the same loop, the same heart-rate effort, 90 seconds over six miles). This one gives a bare percentage with no method.
 >
-> *Which pile:*
+> *Which pile:* (c). The rule is ambiguous here and my reading is defensible. The taxonomy never says what makes a fact "checkable", and in particular whether a self-reported, unsourced figure counts.
 
 **2.**
-> *The post:*
+> *The post:* None. Staff and I matched on the other 29 posts.
 >
-> *Staff said / I said:*
+> *Staff said / I said:* n/a
 >
-> *My call, and why:*
+> *My call, and why:* n/a
 >
-> *Which pile:*
+> *Which pile:* n/a
 
 **What the pattern in my disagreements tells me:**
 
+With one disagreement out of 30, there isn't much of a pattern, but the single miss is informative. I agreed with staff on every `reaction` post and every bare-assertion `hot_take`. The one miss came on the `analysis` / `hot_take` boundary, and it wasn't me applying a rule loosely. Staff and I read an undefined word in the definition, "checkable", two different ways. I held a number to a higher standard (it has to say where it came from) than staff did (any specific number that does work in the argument). I applied my standard the same way across all of the runner's-own-numbers posts. For my own 200 labels, this is only indirect evidence, because it's a different taxonomy on different posts. It suggests I apply a written rule consistently. The weak point is a definition that leans on a word nobody has pinned down, because then two careful readers can each be consistent and still disagree. That is the thing to check in Milestone 4: whether my own definitions leave a key word that loose. It matters most on my hardest boundary (`experience_request` vs. `risk_check`) and on the pair the matrix confuses most (`risk_check` called `rule_question`). This check does **not** stand in for criterion 4 (a second reader on my own 20 `cold` rows), which is a separate measurement.
 
 
 ---
