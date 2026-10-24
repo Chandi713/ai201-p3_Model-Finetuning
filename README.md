@@ -439,11 +439,11 @@ Run on `mps` (Apple Silicon), fine-tuned `distilbert-base-uncased`, 3 epochs, lr
 
 | Criterion | Target | Seed 42 | Seed 7 | Seed 2024 | Verdict |
 |---|---|---|---|---|---|
-| 1. Overall accuracy | ≥ 0.60 on every seed | 0.419 | 0.442 | 0.419 | (Milestone 4) |
-| 2. Per-label F1 (`rule_question` / `experience_request` / `risk_check` / `miscellaneous`) | first three ≥ 0.50, `miscellaneous` ≥ 0.40 | 0.571 / 0.000 / 0.348 / 0.000 | 0.539 / 0.000 / 0.509 / 0.000 | 0.537 / 0.190 / 0.294 / 0.000 | (Milestone 4) |
-| 3. Balance: largest predicted-label share | ≤ 0.50 | 0.767 (`rule_question`) | 0.663 (`rule_question`) | 0.884 (`rule_question`) | (Milestone 4) |
-| 4. Consistency: second reader agrees on the 20 `cold` rows | ≥ 15 / 20 | not run yet | not run yet | not run yet | (Milestone 4) |
-| 5. Confidence gap (most minus least confident third) | ≥ 0.12 | 0.179 | 0.536 | 0.464 | (Milestone 4) |
+| 1. Overall accuracy | ≥ 0.60 on every seed | 0.419 | 0.442 | 0.419 | MISSED |
+| 2. Per-label F1 (`rule_question` / `experience_request` / `risk_check` / `miscellaneous`) | first three ≥ 0.50, `miscellaneous` ≥ 0.40 | 0.571 / 0.000 / 0.348 / 0.000 | 0.539 / 0.000 / 0.509 / 0.000 | 0.537 / 0.190 / 0.294 / 0.000 | MISSED |
+| 3. Balance: largest predicted-label share | ≤ 0.50 | 0.767 (`rule_question`) | 0.663 (`rule_question`) | 0.884 (`rule_question`) | MISSED |
+| 4. Consistency: second reader agrees on the 20 `cold` rows | ≥ 15 / 20 | not run yet | not run yet | not run yet | NOT TESTED |
+| 5. Confidence gap (most minus least confident third) | ≥ 0.12 | 0.179 | 0.536 | 0.464 | MET |
 
 ### Confusion matrix
 
@@ -469,11 +469,11 @@ The biggest off-diagonal cell is 18 real `risk_check` posts called `rule_questio
 
 | # | Criterion | Target | Verdict | How I decided |
 |---|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
-| 4 |  |  |  |  |
-| 5 |  |  |  |  |
+| 1 | Overall accuracy | ≥ 0.60 on every seed | MISSED | Missed on all three seeds (0.419, 0.442, 0.419), each 0.16–0.18 short. The best seed is still nowhere near the target. |
+| 2 | Per-label F1 | `rule_question`, `experience_request`, `risk_check` ≥ 0.50; `miscellaneous` ≥ 0.40 | MISSED | Only `rule_question` clears its floor on every seed (0.571, 0.539, 0.537). `risk_check` passes once (0.509 on seed 7) and fails twice (0.348, 0.294). `experience_request` never passes (0.000, 0.000, 0.190), and `miscellaneous` is 0.000 on every seed. One failing label on one seed is enough to miss. |
+| 3 | Balance: largest predicted-label share | ≤ 0.50 on every seed | MISSED | `rule_question` is over half the guesses on every seed: 66/86 = 0.767, 57/86 = 0.663, 76/86 = 0.884 (column sums of each seed's confusion matrix). |
+| 4 | Consistency: second reader on the 20 `cold` rows | ≥ 15 / 20 | NOT TESTED | No second reader labelled the 20 `cold` rows before this deadline, so there's no count to compare with 15. Untested isn't met. I didn't substitute the 29/30 staff agreement, because that's a different taxonomy on different posts. |
+| 5 | Confidence gap (sure third − unsure third) | ≥ 0.12 on every seed | MET | Holds on all three seeds as raw differences: 0.179, 0.536, 0.464. Met as written. The diagnosis below explains why this pass is weaker than it looks. |
 
 **Diagnoses**
 
@@ -485,6 +485,26 @@ The biggest off-diagonal cell is 18 real `risk_check` posts called `rule_questio
      ⚠️ Use your agreement report as evidence. It is the only instrument you
      have that can tell a LABELLING problem from a MODEL problem, and this
      section is graded on whether you used it that way. -->
+
+**Criteria 1, 2 and 3 are one failure seen three ways: the model collapses onto `rule_question`.** On every seed, almost every row of the confusion matrix sends most of its posts to the `rule_question` column. 14, 15 and 17 of the 19 true `experience_request` posts went there, as did 18, 12 and 21 of the 26 true `risk_check` posts and 6, 6 and 9 of the 9 `miscellaneous` posts. `miscellaneous` was never predicted on any seed, and `experience_request` was predicted twice in 258 test predictions. That collapse is why criterion 3 fails, why accuracy sits barely above the 0.37 that always guessing `rule_question` would score (criterion 1), and why two labels have F1 0.000 (criterion 2). Accuracy moved only 0.023 across seeds, so this is a stable result, not an unlucky split.
+
+**Is it my labelling or the model?** I can't test my own labels directly, because criterion 4 was not run. The evidence I do have points away from inconsistent labelling as the main cause:
+
+- **Staff agreement (indirect):** I matched staff on 29 of 30 posts under a written taxonomy I didn't design. The one disagreement was a defensible reading of an undefined word ("checkable"), not a rule applied two ways (see the Agreement Report). That suggests I apply written decision rules consistently. It's a different taxonomy, so this is indirect.
+- **The confusion goes the wrong direction for a labelling problem.** If my `experience_request` / `risk_check` rule were applied inconsistently, those two labels would trade posts with each other. They barely do: `experience_request` → `risk_check` is 5, 4 and 0, and `risk_check` → `experience_request` is 0 on every seed. Both drain into `rule_question` instead. Even the hardest boundary I named isn't where the model fails; it never got far enough to fail there.
+- **The baseline fails on the same two labels.** The zero-shot model, which never saw my labels, also scored F1 0.000 on `experience_request` and `miscellaneous`. A model that never trained on my labels can't have learned my inconsistencies. So part of the difficulty is in the task and in how those two definitions are worded. With bare label names instead of my definitions, the baseline scored 0.434 and 0.182 on them.
+
+**The training evidence points at undertraining.** Training loss started between 1.34 and 1.36 and ended between 1.18 and 1.21 on every seed. A model guessing uniformly over four labels scores ln 4 ≈ 1.386, so it barely moved off chance. Validation loss was still falling at epoch 3 (1.279 → 1.251 → 1.243 on seed 42), so training stopped while the model was still improving. The model's confidence says the same thing: its average top probability is about 0.40 whether it is right or wrong (0.41 vs. 0.39 on seed 42), only a little above the 0.25 of a pure guess. Three epochs over 401 rows is about 78 update steps. That's enough to learn "mostly say `rule_question`", the largest label (150 of 401 training rows). It isn't enough to learn an intent distinction in a community where every post uses the same F-1 vocabulary (OPT, I-20, USCIS, DSO).
+
+**Per-label causes:**
+
+- **`miscellaneous` (F1 0.000 × 3):** too few examples. It has 43 training rows and 9 test rows, the smallest label by far, and its posts still talk about F-1 life, so they look like questions. It was never predicted.
+- **`experience_request` (F1 0.000, 0.000, 0.190):** a genuinely hard label for this setup. What separates it is intent ("has anyone…"), not vocabulary. Its posts go to `rule_question`, not to `risk_check`, so this is the collapse rather than the boundary I expected to be hardest.
+- **`risk_check` (F1 0.348, 0.509, 0.294):** the jumpiest label. When the model happens to use `risk_check` more (seed 7, with 29 predictions), F1 clears 0.50. When it barely uses it (seed 2024, with 8 predictions), F1 drops to 0.294. Whether it passes depends on how far each seed collapsed, not on a learned boundary.
+
+**Why criterion 5's pass is weaker than it looks.** The gap is real on all three seeds, but the sure third is mostly the model repeating `rule_question` on obvious rule posts (`rule_question` recall is 0.75–0.91). It ranks the majority habit, not a learned four-way distinction. The verdict stays MET because the criterion as written was met.
+
+**Diagnosis in one line:** the main cause is a task the model can't reach in this training setup (an intent-not-topic distinction learned from too few update steps), plus too few `miscellaneous` examples. The evidence I have doesn't point at inconsistent labelling, but criterion 4 is the test that would confirm it, and it wasn't run.
 
 
 
