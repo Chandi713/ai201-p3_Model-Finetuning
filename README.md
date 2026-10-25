@@ -373,6 +373,37 @@ criteria stay as filed.
   pre-labelled row. The dicey posts I labelled by hand are marked `hard
   case` in `labels.csv`.
 
+**Moment 3 (unit 6)**
+
+- *What I asked for:* A clear explanation of the parts of
+  `data/staff_taxonomy.md` that confused me, and a copy of the 30 posts
+  from `data/staff_posts.csv` set up as `my_staff_labels.csv` with the
+  `text` column filled in and the `label` column empty.
+- *What came back:* A clearer picture of the three staff labels and what
+  kind of statement belongs to each, and a ready file with every post
+  pasted exactly as written, so `agreement.py` could match them on text.
+- *What I changed:* Nothing in the labels came from the AI. I labelled all
+  30 posts by hand under the staff rules, and saved the file before I
+  opened `data/staff_labels.csv`. The file saved me from building it and
+  copying 30 posts by hand, which is where a retyped or trimmed post would
+  have failed to match.
+
+**Moment 4 (unit 6)**
+
+- *What I asked for:* To read the results and data from `takemeter.ipynb`
+  and the results files, and write them into the right README sections.
+  I gave it the context of the task and the responses each section needed.
+- *What came back:* The numbers placed into the run logs, verdicts and
+  comparison tables, with my reasoning paraphrased into the written
+  sections. It saved me copying and typing everything by hand.
+- *What I changed:* I made the calls myself and corrected the write-up
+  where it didn't match my reasoning. The clearest case was the staff
+  disagreement. The first draft conceded to staff, and I replaced it with
+  my actual reason for `hot_take`: the 2% has no stated source or method,
+  so it isn't checkable. I also chose to report criterion 4 as not tested
+  rather than substitute another measure, and chose the epochs change as
+  my one improvement.
+
 **Pre-labelling disclosure:**
 20 rows were labelled cold, with no tools, and are marked `cold`. The other
 540 were AI-pre-labelled from the written definitions, then read and
@@ -412,6 +443,8 @@ I predict the trained model will beat the baseline on `risk_check` and `experien
 The trained model did **not** beat the baseline. It lost on accuracy (0.419 vs. 0.453), on macro F1 (0.230 vs. 0.274) and on `risk_check` (0.348 vs. 0.557). It was only slightly ahead on `rule_question` (0.571 vs. 0.540). So on this split, my fine-tuning added nothing measurable over a general model reading my definitions. My prediction was wrong: I expected a win on `risk_check` and `experience_request`, and got a loss and a tie at zero.
 
 The more important finding is that both models scored F1 0.0 on `experience_request` and `miscellaneous`. A trained model and an untrained one failing on the same two labels points at the task or the labels, not at the training. The baseline is also slower (a few seconds per post on `mps`), so on cost alone it is no better. This is one seed, so I'll revisit the comparison once I have three.
+
+**Revisited after the improvement (10 epochs).** The baseline was only scored on the seed-42 split, so seed 42 is the only fair comparison. The before run's seed 42 reproduces `results.json` exactly, which confirms it is the same split. On those 86 posts, the 10-epoch model beats the baseline on accuracy (0.593 vs. 0.453) and on every label except `miscellaneous`: `rule_question` 0.657 vs. 0.540, `experience_request` 0.600 vs. 0.000, `risk_check` 0.607 vs. 0.557, and `miscellaneous` 0.000 for both. So my original prediction, a win on `experience_request` and `risk_check`, held once the model was trained long enough. The 3-epoch loss came from undertraining, not from fine-tuning adding nothing.
 
 **Definitions vs. bare label names.** I also ran the baseline with no definitions, so the model saw only the label names. Same 86 held-out posts.
 
@@ -604,11 +637,25 @@ Yes, a lot, though it didn't turn every miss into a pass. Criterion 3 flipped fr
 
 <!-- For each criterion still missed: what you'd do, and why you stopped. -->
 
+**Criterion 1: overall accuracy (MISSED, 0.593 / 0.581 / 0.605).**
+*What I'd do:* keep the best epoch instead of the last one. Validation loss bottomed out at epoch 6, 4 and 6 and then rose, while the notebook keeps the epoch-10 model (`save_strategy="no"`). I'd evaluate and save every epoch and load the best one (`load_best_model_at_end=True`, or simply train for about 6 epochs). Seeds 42 and 7 are 0.007 and 0.019 short, and seed 7 is both the most overfit and the least accurate. So stopping at the validation minimum is the change most likely to push all three over 0.60.
+*Why I stopped:* this unit allows exactly one change, and I spent it on the number of epochs. Early stopping would be a second change, and its effect couldn't be separated from the first.
+
+**Criterion 2: per-label F1 (MISSED, but only on `miscellaneous`, 0.000 on every seed).**
+*What I'd do:* add at least 30 more `miscellaneous` posts, labelled with the same care as the first batch. It has only 61 rows (43 in training, 9 in test), and in all six runs, before and after, the model never predicted it once. The other three labels were fixed by more training; this one wasn't, which points at too few examples, not too little training. If more data alone didn't move it, the next step would be class weights in the loss, so that the smallest label isn't drowned out by the other 358 training rows.
+*Why I stopped:* the one change went to the cause behind three failing criteria (the `rule_question` collapse), not to the single label left. Labelling 30 good `miscellaneous` posts from r/f1visa is also a full labelling session in its own right.
+
+**Criterion 4: consistency (NOT TESTED).**
+*What I'd do:* give one second reader the 20 `cold` texts and my README definitions and decision rule, with no labels showing, and count exact matches against my 15/20 target. That's the only direct test of whether my own labels are consistent. Until it runs, the "not a labelling problem" part of my diagnosis rests on indirect evidence (the 29/30 staff agreement and the shape of the confusion matrix).
+*Why I stopped:* I couldn't get a second reader to do the labelling before this deadline.
+
 
 
 **The gap between what I meant my labels to capture and what the model
 learned:**
 <!-- Two sentences. Your confusion matrix is the evidence. -->
+
+I meant my labels to capture intent, meaning what kind of answer would settle the post, but at 3 epochs the model learned topic and sent 66, 57 and 76 of 86 posts to `rule_question`; only at 10 epochs did it learn intent for three labels, with `experience_request` and `risk_check` now confusing each other instead of both draining into `rule_question`. It never learned `miscellaneous`, the one label defined by what a post *isn't* asking: in every after-run matrix all 9 `miscellaneous` posts went to the other three labels, so to the model "not a visa question" still looks like a visa question.
 
 
 
