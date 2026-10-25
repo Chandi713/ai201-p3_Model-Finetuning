@@ -568,25 +568,33 @@ With one disagreement out of 30, there isn't much of a pattern, but the single m
 ## The Improvement
 
 **What I changed:**
+One training setting: `EPOCHS = 3` → `EPOCHS = 10`. Everything else is identical to the before run: the same `labels.csv`, taxonomy, criteria, base model (`distilbert-base-uncased`), learning rate (2e-5), batch size (16), max length (128) and seeds (42, 7, 2024).
 
 **Which diagnosis pointed at it:**
+Undertraining. In the before run, training loss only fell from about 1.35 to 1.18–1.21, against ln 4 ≈ 1.386 for a uniform guess over four labels. Validation loss was still falling at epoch 3, and the model's average top probability was about 0.40, barely above the 0.25 of a pure guess. Three epochs over 401 rows is about 78 update steps, which was enough to learn "say `rule_question`" but not the intent distinction. I didn't relabel, because the labelling evidence (29/30 staff agreement, and `experience_request` / `risk_check` barely trading posts) didn't point at my labels.
 
 ### Run Log — After
 
-Run on `mps` (Apple Silicon), fine-tuned `distilbert-base-uncased`, 3 epochs, lr 2e-5, batch 16, max length 128. Source: `results_three_seeds_before.json`. Accuracy moved only 0.023 across the three seeds (0.419 to 0.442), well under the ten-point warning line, so the poor result is stable and not a bad draw.
+Run on `mps` (Apple Silicon), fine-tuned `distilbert-base-uncased`, **10 epochs**, lr 2e-5, batch 16, max length 128. Source: `results_three_seeds_after.json`. Accuracy moved 0.024 across the three seeds (0.581 to 0.605), still well under the ten-point warning line.
 
 | Criterion | Target | Seed 42 | Seed 7 | Seed 2024 | Verdict |
 |---|---|---|---|---|---|
-| 1. Overall accuracy | ≥ 0.60 on every seed | 0.419 | 0.442 | 0.419 | (Milestone 4) |
-| 2. Per-label F1 (`rule_question` / `experience_request` / `risk_check` / `miscellaneous`) | first three ≥ 0.50, `miscellaneous` ≥ 0.40 | 0.571 / 0.000 / 0.348 / 0.000 | 0.539 / 0.000 / 0.509 / 0.000 | 0.537 / 0.190 / 0.294 / 0.000 | (Milestone 4) |
-| 3. Balance: largest predicted-label share | ≤ 0.50 | 0.767 (`rule_question`) | 0.663 (`rule_question`) | 0.884 (`rule_question`) | (Milestone 4) |
-| 4. Consistency: second reader agrees on the 20 `cold` rows | ≥ 15 / 20 | not run yet | not run yet | not run yet | (Milestone 4) |
-| 5. Confidence gap (most minus least confident third) | ≥ 0.12 | 0.179 | 0.536 | 0.464 | (Milestone 4) |
+| 1. Overall accuracy | ≥ 0.60 on every seed | 0.593 | 0.581 | 0.605 | MISSED |
+| 2. Per-label F1 (`rule_question` / `experience_request` / `risk_check` / `miscellaneous`) | first three ≥ 0.50, `miscellaneous` ≥ 0.40 | 0.657 / 0.600 / 0.607 / 0.000 | 0.636 / 0.564 / 0.621 / 0.000 | 0.677 / 0.683 / 0.561 / 0.000 | MISSED |
+| 3. Balance: largest predicted-label share | ≤ 0.50 | 0.407 (`rule_question`) | 0.395 (`rule_question`) | 0.384 (`rule_question`) | MET |
+| 4. Consistency: second reader agrees on the 20 `cold` rows | ≥ 15 / 20 | not run | not run | not run | NOT TESTED |
+| 5. Confidence gap (most minus least confident third) | ≥ 0.12 | 0.179 | 0.143 | 0.429 | MET |
 
 **Did it help, and how do I know:**
 
-<!-- If it didn't, say so. Relabelling that didn't help is a genuinely
-     interesting result and earns full credit. -->
+Yes, a lot, though it didn't turn every miss into a pass. Criterion 3 flipped from MISSED to MET. Criteria 1 and 2 are still MISSED, but they are now close rather than far.
+
+- **The collapse is gone (criterion 3, MISSED → MET).** The largest predicted-label share dropped from 0.663–0.884 to 0.384–0.407 on every seed. The model now predicts `experience_request` 20–22 times and `risk_check` 30–32 times per seed, where before it predicted `experience_request` twice in all three seeds combined.
+- **Accuracy (criterion 1) rose about 0.16–0.19 on every seed, but it still misses.** It went from 0.419 / 0.442 / 0.419 to 0.593 / 0.581 / 0.605. Seed 2024 clears 0.60. Seeds 42 and 7 don't (0.593 is seven-thousandths short), and the target has to hold on every seed, so it stays MISSED.
+- **Per-label F1 (criterion 2) still misses, but only on one label.** `rule_question`, `experience_request` and `risk_check` now clear 0.50 on all three seeds; `experience_request` went from 0.000 / 0.000 / 0.190 to 0.600 / 0.564 / 0.683. `miscellaneous` is still 0.000 on every seed, because it was never predicted once. More training fixed the labels that had enough examples and did nothing for the one that doesn't.
+- **The new errors are on the boundary I expected to be hard.** In seed 42, `experience_request` → `risk_check` is now 5, and `risk_check` → `experience_request` is 2. Those two labels now trade posts with each other instead of both draining into `rule_question`. The model got far enough to meet the real boundary.
+- **Confidence (criterion 5) is still MET, and it now means more.** The gap is 0.179 / 0.143 / 0.429, all ≥ 0.12. The model's average top probability rose from about 0.40 to 0.63–0.75. Its sure third is no longer just the `rule_question` habit, because it is spread across three labels.
+- **One warning sign: validation loss bottomed out early and then rose.** The lowest validation loss came at epoch 6 (seed 42), epoch 4 (seed 7) and epoch 6 (seed 2024). By epoch 10 it had risen, most on seed 7 (1.142 → 1.237), while training loss kept falling. The notebook keeps the last epoch, not the best one (`save_strategy="no"`). So 10 epochs is past the sweet spot, and the model is starting to memorise the training set. Seed 7, the most overfit, also has the lowest accuracy (0.581). Stopping earlier might push seeds 42 and 7 over 0.60, but that would be a second change, so I'm only noting it here.
 
 
 
